@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchCryptos } from "../api/coinGecko";
-import { CryptoCard } from "./CryptoCard";
-
+import { CryptoCard } from "../components/CryptoCard";
 export const Home = () => {
   const [cryptoList, setCryptoList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
@@ -11,7 +10,9 @@ export const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchCryptoData();
+    const interval = setInterval(fetchCryptoData, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -22,8 +23,8 @@ export const Home = () => {
     try {
       const data = await fetchCryptos();
       setCryptoList(data);
-    } catch (error) {
-      console.error("Error fetching crypto: ", error);
+    } catch (err) {
+      console.error("Error fetching crypto: ", err);
     } finally {
       setIsLoading(false);
     }
@@ -33,8 +34,9 @@ export const Home = () => {
     let filtered = cryptoList.filter(
       (crypto) =>
         crypto.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        crypto.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+        crypto.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
     );
+
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -51,6 +53,7 @@ export const Home = () => {
           return a.market_cap_rank - b.market_cap_rank;
       }
     });
+
     setFilteredList(filtered);
   };
 
@@ -100,6 +103,7 @@ export const Home = () => {
           </button>
         </div>
       </div>
+
       {isLoading ? (
         <div className="loading">
           <div className="spinner" />
@@ -108,10 +112,14 @@ export const Home = () => {
       ) : (
         <div className={`crypto-container ${viewMode}`}>
           {filteredList.map((crypto, key) => (
-            <CryptoCard key={key} crypto={crypto} />
+            <CryptoCard crypto={crypto} key={key} />
           ))}
         </div>
       )}
+
+      <footer className="footer">
+        <p>Data provided by CoinGecko API • Updated every 30 seconds</p>
+      </footer>
     </div>
   );
 };
